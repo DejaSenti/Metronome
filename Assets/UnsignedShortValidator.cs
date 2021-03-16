@@ -1,11 +1,11 @@
 ﻿using UnityEngine;
 
-[CreateAssetMenu(fileName = "Subdivision Validator", menuName = "Subdivision Validator")]
-public class SubdivisionValidator : TMPro.TMP_InputValidator
+[CreateAssetMenu(fileName = "Unsigned Short Validator", menuName = "Unsigned Short Validator")]
+public class UnsignedShortValidator : TMPro.TMP_InputValidator
 {
     public override char Validate(ref string text, ref int pos, char ch)
     {
-        if (char.IsNumber(ch) || ch == '+' && pos > 0 && text[pos - 1] != '+')
+        if (char.IsNumber(ch) && pos < 3)
         {
 #if UNITY_EDITOR
             text = text.Insert(pos, ch.ToString());

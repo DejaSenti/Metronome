@@ -1,9 +1,15 @@
+using System;
 using UnityEngine;
 
 public class Metronome : MonoBehaviour
 {
-    private int NUM_SECONDS_IN_MINUTE = 60;
-    private int NUM_BEATS_IN_MEASURE = 4;
+    private const float NUM_SECONDS_IN_MINUTE = 60;
+    private const float NUM_BEATS_IN_MEASURE = 4;
+
+    [SerializeField]
+    private AudioSource source;
+    [SerializeField]
+    private AudioClip[] tickTock;
 
     private bool[] metronomeArray;
     private float periodTime;
@@ -38,14 +44,8 @@ public class Metronome : MonoBehaviour
 
     private void TickTock()
     {
-        if (metronomeArray[index])
-        {
-            Debug.Log("Tick");
-        }
-        else
-        {
-            Debug.Log("Tock");
-        }
+        var audioIndex = Convert.ToInt32(metronomeArray[index]);
+        source.PlayOneShot(tickTock[audioIndex]);
 
         index++;
 

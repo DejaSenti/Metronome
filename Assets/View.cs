@@ -6,6 +6,9 @@ using System.Collections.Generic;
 
 public class View : MonoBehaviour
 {
+    private const ushort DEFAULT_TEMPO = 100;
+    private const ushort DEFAULT_NUMERATOR = 4;
+
     [SerializeField]
     private TMP_InputField tempoField;
     [SerializeField]
@@ -53,19 +56,47 @@ public class View : MonoBehaviour
 
     public void UpdateTempoSlider()
     {
-        ushort value = ushort.Parse(tempoField.text);
+        ushort tempo;
 
-        if (value > tempoSlider.maxValue || value < tempoSlider.minValue)
+        try
+        {
+            tempo = ushort.Parse(tempoField.text);
+        }
+        catch
+        {
+            tempo = DEFAULT_TEMPO;
+        }
+
+        if (tempo > tempoSlider.maxValue || tempo < tempoSlider.minValue)
             return;
 
-        tempoSlider.value = value;
+        tempoSlider.value = tempo;
     }
 
     public void UpdateMetronomeData()
     {
-        var tempo = ushort.Parse(tempoField.text);
-        var numer = ushort.Parse(numerator.text);
-        var denom = ushort.Parse(denominator.options[denominator.value].text);
+        ushort tempo;
+        ushort numer;
+
+        try
+        {
+            tempo = ushort.Parse(tempoField.text);
+        }
+        catch
+        {
+            tempo = DEFAULT_TEMPO;
+        }
+
+        try
+        {
+            numer = ushort.Parse(numerator.text);
+        }
+        catch
+        {
+            numer = DEFAULT_NUMERATOR;
+        }
+
+        ushort denom = ushort.Parse(denominator.options[denominator.value].text);
         List<ushort> subs = Enumerable.Repeat((ushort)1, numer).ToList();
 
         if (subdivisions.text.Length > 0)
@@ -86,13 +117,12 @@ public class View : MonoBehaviour
     {
         while (!char.IsDigit(text[text.Length - 1]))
         {
-            text.Remove(text.Length - 1);
+            text = text.Remove(text.Length - 1);
         }
 
         var length = text.Length - text.Replace("+", "").Length + 1;
         var result = new List<ushort>(length);
 
-        int count = 0;
         string currentNum = "";
 
         for (int i = 0; i < text.Length; i++)
@@ -103,11 +133,11 @@ public class View : MonoBehaviour
             }
             else
             {
-                result[count] = ushort.Parse(currentNum);
-                count++;
+                result.Add(ushort.Parse(currentNum));
                 currentNum = "";
             }
         }
+        result.Add(ushort.Parse(currentNum));
 
         return result;
     }
