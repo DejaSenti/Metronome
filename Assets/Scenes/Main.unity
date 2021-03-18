@@ -3859,7 +3859,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1097553312}
         m_TargetAssemblyTypeName: Controller, Assembly-CSharp
-        m_MethodName: OnPlayClick
+        m_MethodName: OnQuitClick
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
