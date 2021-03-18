@@ -97,7 +97,7 @@ public class View : MonoBehaviour
         }
 
         ushort denom = ushort.Parse(denominator.options[denominator.value].text);
-        List<ushort> subs = Enumerable.Repeat((ushort)1, numer).ToList();
+        List<ushort> subs = new List<ushort> { numer };
 
         if (subdivisions.text.Length > 0)
         {
