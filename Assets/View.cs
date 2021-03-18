@@ -1,13 +1,11 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
-using System.Linq;
 using System.Collections.Generic;
 
 public class View : MonoBehaviour
 {
-    private const ushort DEFAULT_TEMPO = 100;
-    private const ushort DEFAULT_NUMERATOR = 4;
+    private const int DEFAULT_DENOM_INDEX = 1;
 
     [SerializeField]
     private TMP_InputField tempoField;
@@ -21,20 +19,73 @@ public class View : MonoBehaviour
     private Slider tempoSlider;
     [SerializeField]
     private TMP_Text playButton;
+    [SerializeField]
+    private GameObject subsHelpOverlay;
+    [SerializeField]
+    private Button subsHelpOverlayButton;
 
     [SerializeField]
     private Controller controller;
 
-    private MetronomeData metronomeData;
-
-    private void Awake()
+    public void OnTempoTextChange()
     {
-        if (metronomeData == null)
+        ushort tempo;
+
+        try
         {
-            metronomeData = new MetronomeData();
+            tempo = ushort.Parse(tempoField.text);
+        }
+        catch
+        {
+            tempo = MetronomeData.DEFAULT_TEMPO;
         }
 
-        UpdateMetronomeData();
+        UpdateTempoSlider(tempo);
+
+        controller.UpdateMetronomeData(tempo, MetronomeProperties.Tempo);
+    }
+
+    public void OnTempoSliderChange()
+    {
+        ushort tempo = (ushort)tempoSlider.value;
+        UpdateTempoField(tempo);
+
+        controller.UpdateMetronomeData(tempo, MetronomeProperties.Tempo);
+    }
+
+    public void OnNumeratorChange()
+    {
+        ushort numer;
+
+        try
+        {
+            numer = ushort.Parse(numerator.text);
+        }
+        catch
+        {
+            numer = MetronomeData.DEFAULT_NUMERATOR;
+        }
+
+        controller.UpdateMetronomeData(numer, MetronomeProperties.Numerator);
+    }
+
+    public void OnDenominatorChange()
+    {
+        ushort denom = ushort.Parse(denominator.options[denominator.value].text);
+
+        controller.UpdateMetronomeData(denom, MetronomeProperties.Denominator);
+    }
+
+    public void OnSubdivisionChange()
+    {
+        List<ushort> subs = null;
+
+        if (subdivisions.text.Length > 0)
+        {
+            subs = GetSubdivisionsFromTextField(subdivisions.text);
+        }
+
+        controller.UpdateMetronomeData(subs, MetronomeProperties.Subdivisions);
     }
 
     public void UpdatePlayButtonDisplay(bool status)
@@ -49,68 +100,52 @@ public class View : MonoBehaviour
         }
     }
 
-    public void UpdateTempoField()
+    public void UpdateTempoField(ushort value)
     {
-        tempoField.text = tempoSlider.value.ToString();
+        tempoField.text = value.ToString();
     }
 
-    public void UpdateTempoSlider()
+    public void UpdateTempoSlider(ushort tempo)
     {
-        ushort tempo;
-
-        try
-        {
-            tempo = ushort.Parse(tempoField.text);
-        }
-        catch
-        {
-            tempo = DEFAULT_TEMPO;
-        }
-
         if (tempo > tempoSlider.maxValue || tempo < tempoSlider.minValue)
             return;
 
         tempoSlider.value = tempo;
     }
 
-    public void UpdateMetronomeData()
+    public void UpdateTempoView(ushort tempo)
     {
-        ushort tempo;
-        ushort numer;
+        UpdateTempoSlider(tempo);
+        UpdateTempoField(tempo);
+    }
 
-        try
-        {
-            tempo = ushort.Parse(tempoField.text);
-        }
-        catch
-        {
-            tempo = DEFAULT_TEMPO;
-        }
+    public void UpdateMetronomeView(MetronomeData data)
+    {
+        UpdateTempoView(data.Tempo);
 
-        try
-        {
-            numer = ushort.Parse(numerator.text);
-        }
-        catch
-        {
-            numer = DEFAULT_NUMERATOR;
-        }
+        numerator.text = data.Numerator.ToString();
 
-        ushort denom = ushort.Parse(denominator.options[denominator.value].text);
-        List<ushort> subs = new List<ushort> { numer };
+        var denomIndex = denominator.options.FindIndex(x => x.text == data.Denominator.ToString());
+        denominator.value = denomIndex == -1 ? DEFAULT_DENOM_INDEX : denomIndex;
 
-        if (subdivisions.text.Length > 0)
+        subdivisions.text = GetTextFromSubdivisions(data.Subdivisions);
+    }
+
+    private string GetTextFromSubdivisions(List<ushort> subs)
+    {
+        string result = "";
+
+        for (int i = 0; i < subs.Count; i++)
         {
-            var subsFromField = GetSubdivisionsFromTextField(subdivisions.text);
-            if (subsFromField.Sum(x => x) == numer)
+            result += subs[i].ToString();
+
+            if (i < subs.Count - 1)
             {
-                subs = subsFromField;
+                result += '+';
             }
         }
 
-        metronomeData.UpdateData(tempo, numer, denom, subs);
-
-        controller.UpdateModelData(metronomeData);
+        return result;
     }
 
     private List<ushort> GetSubdivisionsFromTextField(string text)
@@ -140,5 +175,11 @@ public class View : MonoBehaviour
         result.Add(ushort.Parse(currentNum));
 
         return result;
+    }
+
+    public void SetSubsHelpOverlay(bool status)
+    {
+        subsHelpOverlayButton.interactable = !status;
+        subsHelpOverlay.SetActive(status);
     }
 }
