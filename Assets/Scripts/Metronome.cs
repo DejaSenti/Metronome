@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Linq;
 using UnityEngine;
 
@@ -6,6 +7,10 @@ public class Metronome : MonoBehaviour
 {
     public const float NUM_SECONDS_IN_MINUTE = 60;
     private const float NUM_BEATS_IN_MEASURE = 4;
+
+    public MetronomeData Data { get; private set; }
+
+    private IEnumerator tickTockCoroutine;
 
     [SerializeField]
     private AudioSource source;
@@ -15,9 +20,7 @@ public class Metronome : MonoBehaviour
     private bool[] metronomeArray;
     private float periodTime;
 
-    private int index;
-
-    public MetronomeData Data { get; private set; }
+    private int tickTockIndex;
 
     private void Awake()
     {
@@ -45,23 +48,33 @@ public class Metronome : MonoBehaviour
 
     private void OnEnable()
     {
-        index = 0;
-        InvokeRepeating("TickTock", 0, periodTime);
+        tickTockCoroutine = WaitAndTickTock(periodTime);
+        StartCoroutine(tickTockCoroutine);
     }
 
     private void OnDisable()
     {
-        CancelInvoke();
+        StopCoroutine(tickTockCoroutine);
+        tickTockIndex = 0;
+    }
+
+    private IEnumerator WaitAndTickTock(float periodTime)
+    {
+        while (true)
+        {
+            TickTock();
+            yield return new WaitForSecondsRealtime(periodTime);
+        }
     }
 
     private void TickTock()
     {
-        var audioIndex = Convert.ToInt32(metronomeArray[index]);
+        var audioIndex = Convert.ToInt32(metronomeArray[tickTockIndex]);
         source.PlayOneShot(tickTock[audioIndex]);
 
-        index++;
+        tickTockIndex++;
 
-        if (index >= metronomeArray.Length)
-            index = 0;
+        if (tickTockIndex >= metronomeArray.Length)
+            tickTockIndex = 0;
     }
 }

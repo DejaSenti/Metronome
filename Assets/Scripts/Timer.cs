@@ -41,9 +41,4 @@ public class Timer : MonoBehaviour
         elapsed = 0;
         enabled = false;
     }
-
-    internal void StartTimer(object tAP_TIMEOUT_PERIOD)
-    {
-        throw new NotImplementedException();
-    }
 }
