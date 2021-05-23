@@ -10,15 +10,12 @@ public class Metronome : MonoBehaviour
 
     public MetronomeData Data { get; private set; }
 
-    private IEnumerator tickTockCoroutine;
-
     [SerializeField]
-    private AudioSource source;
-    [SerializeField]
-    private AudioClip[] tickTock;
+    private AudioSource[] tickTock;
 
     private bool[] metronomeArray;
     private float periodTime;
+    private double nextTick;
 
     private int tickTockIndex;
 
@@ -44,37 +41,46 @@ public class Metronome : MonoBehaviour
             index += Data.Subdivisions[i];
             metronomeArray[index] = true;
         }
+
+        tickTockIndex = 0;
     }
 
     private void OnEnable()
     {
-        tickTockCoroutine = WaitAndTickTock(periodTime);
-        StartCoroutine(tickTockCoroutine);
+        var audioIndex = Convert.ToInt32(metronomeArray[tickTockIndex]);
+        tickTock[audioIndex].Play();
+
+        ScheduleTickTock();
+    }
+
+    private void Update()
+    {
+        if (AudioSettings.dspTime >= nextTick)
+        {
+            ScheduleTickTock();
+        }
     }
 
     private void OnDisable()
     {
-        StopCoroutine(tickTockCoroutine);
+        foreach (var source in tickTock)
+        {
+            source.Stop();
+        }
+
         tickTockIndex = 0;
     }
 
-    private IEnumerator WaitAndTickTock(float periodTime)
+    private void ScheduleTickTock()
     {
-        while (true)
-        {
-            TickTock();
-            yield return new WaitForSecondsRealtime(periodTime);
-        }
-    }
-
-    private void TickTock()
-    {
-        var audioIndex = Convert.ToInt32(metronomeArray[tickTockIndex]);
-        source.PlayOneShot(tickTock[audioIndex]);
+        nextTick = AudioSettings.dspTime + periodTime;
 
         tickTockIndex++;
-
         if (tickTockIndex >= metronomeArray.Length)
             tickTockIndex = 0;
+
+        var audioIndex = Convert.ToInt32(metronomeArray[tickTockIndex]);
+
+        tickTock[audioIndex].PlayScheduled(nextTick);
     }
 }
